@@ -1,0 +1,15 @@
+🎓 Breast Cancer Risk Workshop Tool
+Age:
+BMI:
+A1C:
+Systolic Blood Pressure:
+Vitamin D (ng/mL):
+Depression Score (PHQ-9):
+Dense Breasts
+First-Degree Relative with Breast Cancer
+Nulliparous (never given birth)
+HRT Use (Estrogen + Progestin)
+Age at Menarche:
+Alcohol Drinks per Week:
+Calculate Risk
+
