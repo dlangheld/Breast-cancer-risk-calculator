@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Breast Cancer Risk Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        h1 { color: #a01d26; }
+        label, input, select, textarea { display: block; margin-bottom: 10px; }
+        .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; }
+        .button { background-color: #a01d26; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }
+        .button:hover { background-color: #80161f; }
+    </style>
+</head>
+<body>
+    <h1>Breast Cancer Risk Calculator</h1>
+
+    <div class="section">
+        <label>Age: <input type="number" id="age" min="18" max="99"></label>
+        <label>Height (inches): <input type="number" id="height" min="48" max="84"></label>
+        <label>Weight (lbs): <input type="number" id="weight" min="70" max="400"></label>
+        <label>A1C (%): <input type="number" step="0.1" id="a1c"></label>
+        <label>Vitamin D (ng/mL): <input type="number" id="vitd"></label>
+        <label>Blood Pressure Normal? <select id="bp"><option value="yes">Yes</option><option value="no">No</option></select></label>
+        <label>First-degree relative with breast cancer? <select id="family"><option value="yes">Yes</option><option value="no">No</option></select></label>
+        <label>Nulliparous (no childbirths)? <select id="nullip"><option value="yes">Yes</option><option value="no">No</option></select></label>
+        <label>HRT (Hormone Replacement Therapy) Use? <select id="hrt"><option value="yes">Yes</option><option value="no">No</option></select></label>
+        <label>Age of Menarche (first period): <input type="number" id="menarche" min="8" max="18"></label>
+        <label>Alcohol Drinks/Week: <input type="number" id="alcohol" min="0" max="50"></label>
+        <label>Smoker? <select id="smoke"><option value="yes">Yes</option><option value="no">No</option></select></label>
+        <label>Dense breasts? <select id="dense"><option value="yes">Yes</option><option value="no">No</option></select></label>
+        <label>BRCA1 or BRCA2 Gene? <select id="brca"><option value="yes">Yes</option><option value="no">No</option><option value="unknown">Unknown</option></select></label>
+
+        <label>PHQ-9 Depression Score (0–27): <input type="number" id="phq9" min="0" max="27"></label>
+        <p><em>Higher depression scores are associated with increased breast cancer risk due to immune and hormonal changes.</em></p>
+
+        <label>150 min/week of moderate or 75 min/week of vigorous physical activity? 
+        <select id="exercise"><option value="yes">Yes</option><option value="no">No</option></select></label>
+    </div>
+
+    <div class="section">
+        <h3>Modifiable Lifestyle Factors (Check all that apply):</h3>
+        <label><input type="checkbox" class="mod" value="iodine"> Adequate Iodine Intake</label>
+        <label><input type="checkbox" class="mod" value="omega3"> Daily Omega-3s (e.g., fish oil)</label>
+        <label><input type="checkbox" class="mod" value="sulforaphane"> Sulforaphane (broccoli sprouts)</label>
+        <label><input type="checkbox" class="mod" value="antiinflammatory"> Anti-inflammatory diet (e.g., Mediterranean with EVOO)</label>
+        <label><input type="checkbox" class="mod" value="fasting"> Time-restricted eating or intermittent fasting</label>
+        <label><input type="checkbox" class="mod" value="lowstress"> Effective stress management practices</label>
+        <label><input type="checkbox" class="mod" value="qualitysleep"> Regular, high-quality sleep</label>
+    </div>
+
+    <button class="button" onclick="calculateRisk()">Calculate Risk</button>
+
+    <div id="output" class="section"></div>
+
+    <script>
+        function calculateRisk() {
+            const age = parseInt(document.getElementById('age').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const bmi = (weight / (height * height)) * 703;
+
+            const a1c = parseFloat(document.getElementById('a1c').value);
+            const vitd = parseFloat(document.getElementById('vitd').value);
+            const bp = document.getElementById('bp').value;
+            const family = document.getElementById('family').value;
+            const nullip = document.getElementById('nullip').value;
+            const hrt = document.getElementById('hrt').value;
+            const menarche = parseInt(document.getElementById('menarche').value);
+            const alcohol = parseInt(document.getElementById('alcohol').value);
+            const smoke = document.getElementById('smoke').value;
+            const dense = document.getElementById('dense').value;
+            const brca = document.getElementById('brca').value;
+            const phq9 = parseInt(document.getElementById('phq9').value);
+            const exercise = document.getElementById('exercise').value;
+
+            let baselineRisk = age < 50 ? 8 : 10;
+            let risk = baselineRisk;
+            let relRisk = 1.0;
+
+            if (bmi >= 30) { relRisk += 0.3; }
+            if (a1c >= 5.7) { relRisk += 0.2; }
+            if (vitd >= 50 && vitd <= 80) { relRisk -= 0.25; }
+            if (bp === "no") { relRisk += 0.1; }
+            if (family === "yes") { relRisk += 0.3; }
+            if (nullip === "yes") { relRisk += 0.2; }
+            if (hrt === "yes") { relRisk += 0.2; }
+            if (menarche <= 12) { relRisk += 0.1; }
+            if (alcohol >= 7) { relRisk += 0.2; }
+            if (smoke === "yes") { relRisk += 0.1; }
+            if (dense === "yes") { relRisk += 0.2; }
+            if (brca === "yes") { relRisk += 1.0; }
+            if (phq9 >= 10) { relRisk += 0.2; }
+            if (exercise === "yes") { relRisk -= 0.2; }
+
+            let mods = document.querySelectorAll('.mod:checked');
+            relRisk -= mods.length * 0.05;
+
+            let adjustedRisk = risk * relRisk;
+            adjustedRisk = Math.round(adjustedRisk * 10) / 10;
+
+            let note = "";
+            if (adjustedRisk < 0) {
+                note = "<p><strong>Note:</strong> Negative % risk indicates mathematically modeled reduction beyond average. True risk cannot be zero or negative, but this shows very low risk.</p>";
+            }
+
+            document.getElementById('output').innerHTML =
+                `<h3>Results</h3>
+                <p><strong>BMI:</strong> ${bmi.toFixed(1)}</p>
+                <p><strong>Relative Risk:</strong> ${(relRisk * 100).toFixed(1)}%</p>
+                <p><strong>Estimated Lifetime Risk of Breast Cancer:</strong> ${Math.max(adjustedRisk, 0).toFixed(1)}%</p>
+                ${note}`;
+        }
+    </script>
+</body>
+</html>
