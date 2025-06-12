@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Breast Cancer Risk Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+    label { display: block; margin-top: 10px; }
+    input[type="number"], input[type="checkbox"], select { margin-top: 5px; }
+    .output { margin-top: 20px; font-weight: bold; }
+    .low { color: green; }
+    .moderate { color: orange; }
+    .high { color: red; }
+    #riskTips { display: none; border: 1px solid #ccc; padding: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🎓 Breast Cancer Risk Workshop Tool</h1>
+  <form id="riskForm">
+    <label>Age: <input type="number" id="age" value="51"></label>
+    <label>Height (inches): <input type="number" id="height" value="64"></label>
+    <label>Weight (lbs): <input type="number" id="weight" value="118"></label>
+    <label>A1C (HbA1c %): <input type="number" id="a1c" step="0.1" value="5.2"></label>
+    <label>Systolic Blood Pressure: <input type="number" id="bp" value="115"></label>
+    <label>Vitamin D (ng/mL): <input type="number" id="vitd" step="0.1" value="80"></label>
+    <label>Age at Menarche: <input type="number" id="menarche" value="13"></label>
+    <label>Alcohol Drinks per Week: <input type="number" id="alcohol" value="0"></label>
+    <label>Do you engage in regular physical activity (≥150 min/week moderate or 75 min/week vigorous)? <input type="checkbox" id="exercise"></label>
+    <label><input type="checkbox" id="dense"> Dense Breasts</label>
+    <label><input type="checkbox" id="family"> First-Degree Relative with Breast Cancer</label>
+    <label><input type="checkbox" id="nulliparous"> Nulliparous (never given birth)</label>
+    <label><input type="checkbox" id="hrt"> HRT (Hormone Replacement Therapy) Use</label>
+
+    <h3>PHQ-9 Depression Score</h3>
+    <p>0 = not at all, 1 = several days, 2 = more than half the days, 3 = nearly every day</p>
+    <label>Little interest or pleasure in doing things: <input type="number" id="phq1" min="0" max="3" value="0"></label>
+    <label>Feeling down, depressed, or hopeless: <input type="number" id="phq2" min="0" max="3" value="0"></label>
+    <label>Trouble falling/staying asleep or sleeping too much: <input type="number" id="phq3" min="0" max="3" value="0"></label>
+    <label>Feeling tired or having little energy: <input type="number" id="phq4" min="0" max="3" value="0"></label>
+    <label>Poor appetite or overeating: <input type="number" id="phq5" min="0" max="3" value="0"></label>
+    <label>Feeling bad about yourself, or that you are a failure: <input type="number" id="phq6" min="0" max="3" value="0"></label>
+    <label>Trouble concentrating: <input type="number" id="phq7" min="0" max="3" value="0"></label>
+    <label>Moving/speaking slowly or being fidgety/restless: <input type="number" id="phq8" min="0" max="3" value="0"></label>
+    <label>Thoughts that you'd be better off dead: <input type="number" id="phq9" min="0" max="3" value="0"></label>
+
+    <button type="button" onclick="calculateRisk()">Calculate Risk</button>
+  </form>
+
+  <div class="output" id="result"></div>
+
+  <p><strong>Curious how to reduce your risk?</strong> Click the button below to learn evidence-informed strategies that may help lower your lifetime breast cancer risk.</p>
+  <button onclick="toggleTips()">Explore Ways to Lower Your Risk</button>
+
+  <div id="riskTips">
+    <ul>
+      <li>Vitamin D level between 50–80 ng/mL: ~25% reduced risk</li>
+      <li>Regular physical activity (≥150 min/week): ~20% reduced risk</li>
+      <li>Maintaining a BMI between 18.5–24.9: ~15% reduced risk</li>
+      <li>Sulforaphane (from broccoli sprouts): ~13% reduced risk</li>
+      <li>Omega-3 fatty acids (from fish or supplements): ~12% reduced risk</li>
+      <li>Iodine sufficiency (especially breast tissue health): ~10% reduced risk</li>
+      <li>Anti-inflammatory Mediterranean diet with extra virgin olive oil: ~10–15% reduced risk</li>
+    </ul>
+  </div>
+
+  <script>
+    function calculateRisk() {
+      const height = parseFloat(document.getElementById('height').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const bmi = (weight / (height * height)) * 703;
+
+      const a1c = parseFloat(document.getElementById('a1c').value);
+      const bp = parseInt(document.getElementById('bp').value);
+      const vitd = parseFloat(document.getElementById('vitd').value);
+      const menarche = parseInt(document.getElementById('menarche').value);
+      const alcohol = parseInt(document.getElementById('alcohol').value);
+      const exercise = document.getElementById('exercise').checked;
+      const dense = document.getElementById('dense').checked;
+      const family = document.getElementById('family').checked;
+      const nulliparous = document.getElementById('nulliparous').checked;
+      const hrt = document.getElementById('hrt').checked;
+
+      const phq = [
+        'phq1', 'phq2', 'phq3', 'phq4', 'phq5', 'phq6', 'phq7', 'phq8', 'phq9'
+      ].reduce((sum, id) => sum + parseInt(document.getElementById(id).value || 0), 0);
+
+      let score = 0;
+
+      if (bmi >= 30) score += 2.5;
+      else if (bmi >= 25) score += 1.5;
+
+      if (a1c >= 6.5) score += 2;
+      else if (a1c >= 5.7) score += 1;
+
+      if (bp >= 140) score += 1;
+      else if (bp >= 120) score += 0.5;
+
+      if (vitd < 20) score += 1.5;
+      else if (vitd < 30) score += 0.5;
+      else if (vitd >= 50 && vitd <= 80) score -= 1.5;
+
+      if (phq >= 10) score += 1;
+
+      if (dense) score += 2;
+      if (family) score += 2;
+      if (nulliparous) score += 1;
+      if (hrt) score += 1.5;
+      if (menarche < 12) score += 1;
+
+      if (alcohol >= 7) score += 1.5;
+      else if (alcohol >= 3) score += 1;
+      else if (alcohol >= 1) score += 0.5;
+
+      if (exercise) score -= 2;
+
+      if (score < 0) score = 0;
+      if (score > 10) score = 10;
+
+      let absoluteRisk = 10;
+      if (score <= 2.0) absoluteRisk = 8;
+      else if (score <= 4.0) absoluteRisk = 15;
+      else if (score <= 6.0) absoluteRisk = 20;
+      else if (score <= 8.0) absoluteRisk = 30;
+      else absoluteRisk = 40;
+
+      let riskClass = 'low';
+      if (absoluteRisk >= 20 && absoluteRisk < 30) riskClass = 'moderate';
+      else if (absoluteRisk >= 30) riskClass = 'high';
+
+      document.getElementById('result').innerHTML = `
+        Relative Risk Score: <strong>${score.toFixed(1)} / 10</strong><br>
+        Estimated Lifetime Breast Cancer Risk: <strong class="${riskClass}">${absoluteRisk}%</strong><br>
+        <p>This percentage reflects your estimated lifetime risk of being diagnosed with breast cancer. It is intended to help guide a conversation with your health provider about whether screening mammography might be a helpful option based on your individual risk profile.</p>
+      `;
+    }
+
+    function toggleTips() {
+      const section = document.getElementById('riskTips');
+      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>
