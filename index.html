@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Breast Cancer Risk Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #f9f9f9; color: #333; }
+    h1 { color: #b30000; }
+    .section { margin-bottom: 2rem; }
+    .subsection { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    label { display: block; margin: 0.5rem 0; }
+    input[type="number"], select { width: 100%; padding: 0.5rem; margin-top: 0.25rem; }
+    .result { font-size: 1.2em; font-weight: bold; }
+    .risk-good { color: green; }
+    .risk-bad { color: red; }
+    button { background-color: #007bff; color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+  </style>
+</head>
+<body>
+  <h1>Breast Cancer Risk Calculator</h1>
+
+  <div class="section subsection">
+    <label>Age: <input type="number" id="age" min="20" max="100" /></label>
+    <label>Height (inches): <input type="number" id="height" /></label>
+    <label>Weight (lbs): <input type="number" id="weight" /></label>
+    <label>Vitamin D Level (ng/mL): <input type="number" id="vitaminD" /></label>
+    <label>A1C (%): <input type="number" step="0.1" id="a1c" /></label>
+    <label>Blood Pressure Normal? <select id="bp"><option value="yes">Yes</option><option value="no">No</option></select></label>
+    <label>Dense Breasts? <select id="dense"><option value="no">No</option><option value="yes">Yes</option></select></label>
+    <label>First-Degree Relative with Breast Cancer? <select id="family"><option value="no">No</option><option value="yes">Yes</option></select></label>
+    <label>Nulliparous (never had children)? <select id="nullip"><option value="no">No</option><option value="yes">Yes</option></select></label>
+    <label>HRT (Hormone Replacement Therapy)? <select id="hrt"><option value="no">No</option><option value="yes">Yes</option></select></label>
+    <label>Age of Menarche: <input type="number" id="menarche" /></label>
+    <label>Alcohol Drinks per Week: <input type="number" id="alcohol" /></label>
+    <label>Smoking? <select id="smoking"><option value="no">No</option><option value="yes">Yes</option></select></label>
+    <label>BRCA1/BRCA2 Gene Mutation? <select id="brca"><option value="no">No / Don't Know</option><option value="yes">Yes</option></select></label>
+    <label>150 min/week activity? <select id="exercise"><option value="yes">Yes</option><option value="no">No</option></select></label>
+  </div>
+
+  <div class="section subsection">
+    <h2>PHQ-9 Questionnaire</h2>
+    <p>Over the last 2 weeks, how often have you been bothered by the following problems?<br><strong>0 = not at all, 1 = several days, 2 = more than half the days, 3 = nearly every day</strong></p>
+    <div id="phq9">
+      ${[...Array(9)].map((_, i) => `<label>Q${i+1}: <input type="number" min="0" max="3" id="phq${i+1}" /></label>`).join('')}
+    </div>
+  </div>
+
+  <div class="section subsection">
+    <button onclick="calculateRisk()">Calculate Risk</button>
+    <p class="result" id="relativeRiskOutput"></p>
+    <p class="result" id="absoluteRiskOutput"></p>
+    <p id="riskExplanation"></p>
+  </div>
+
+  <script>
+    function calculateRisk() {
+      const age = parseInt(document.getElementById('age').value);
+      const height = parseFloat(document.getElementById('height').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const bmi = (weight / (height * height)) * 703;
+      const vitD = parseFloat(document.getElementById('vitaminD').value);
+      const a1c = parseFloat(document.getElementById('a1c').value);
+      const phq9 = [...Array(9)].reduce((acc, _, i) => acc + parseInt(document.getElementById(`phq${i+1}`).value || 0), 0);
+
+      let relRisk = 1.0;
+
+      if (bmi > 30) relRisk *= 1.2;
+      if (vitD >= 50 && vitD <= 80) relRisk *= 0.75;
+      if (a1c < 5.7) relRisk *= 0.9;
+      if (document.getElementById('bp').value === 'no') relRisk *= 1.2;
+      if (document.getElementById('dense').value === 'yes') relRisk *= 1.2;
+      if (document.getElementById('family').value === 'yes') relRisk *= 2.0;
+      if (document.getElementById('nullip').value === 'yes') relRisk *= 1.15;
+      if (document.getElementById('hrt').value === 'yes') relRisk *= 1.2;
+      if (parseInt(document.getElementById('menarche').value) < 12) relRisk *= 1.1;
+      if (parseInt(document.getElementById('alcohol').value) >= 7) relRisk *= 1.2;
+      if (document.getElementById('smoking').value === 'yes') relRisk *= 1.1;
+      if (document.getElementById('brca').value === 'yes') relRisk *= 4.0;
+      if (document.getElementById('exercise').value === 'yes') relRisk *= 0.8;
+      if (phq9 >= 10) relRisk *= 1.15;
+
+      const baseRisk = (age < 60) ? 8 : 12;
+      const absoluteRisk = baseRisk * relRisk;
+
+      document.getElementById('relativeRiskOutput').innerHTML =
+        `Relative Risk Score: ${(relRisk * 100).toFixed(1)}%`;
+      document.getElementById('absoluteRiskOutput').innerHTML =
+        `Estimated Lifetime Breast Cancer Risk: ${absoluteRisk.toFixed(1)}%`;
+
+      document.getElementById('riskExplanation').innerText =
+        absoluteRisk < 3
+          ? "This percentage suggests your estimated risk is quite low. However, all women still retain some level of risk."
+          : "This estimate can help inform a discussion with your healthcare provider about screening and prevention.";
+    }
+  </script>
+</body>
+</html>
